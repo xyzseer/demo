@@ -21,6 +21,10 @@ export const CHAIN_IDS = {
 
 const api = "8b2690ffdd390bad59638b894ee8d9f6";
 
+/**
+ * Seer markets: The Graph URLs below remain until the Envio indexer is deployed;
+ * then replace per chain with `https://indexer.hyperindex.xyz/.../v1/graphql` (or self-hosted).
+ */
 export const SUBGRAPHS = {
   seer: {
     [CHAIN_IDS.gnosis]: `https://gateway-arbitrum.network.thegraph.com/api/${api}/subgraphs/id/B4vyRqJaSHD8dRDb3BFRoAzuBK18c1QQcXq94JbxDxWH`,

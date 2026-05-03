@@ -1,0 +1,102 @@
+enum MarketType {
+  Generic
+  Futarchy
+}
+
+type Market {
+  id: ID!
+  marketQuestionIds: [String!]!
+  marketType: MarketType!
+  factory: Bytes!
+  creator: Bytes!
+  marketName: String!
+  outcomes: [String!]!
+  outcomesSupply: BigInt!
+  lowerBound: BigInt!
+  upperBound: BigInt!
+  parentCollectionId: Bytes!
+  parentOutcome: BigInt!
+  parentMarket: Market
+  childMarkets: [Market!]! @derivedFrom(field: "parentMarket")
+  wrappedTokens: [Bytes!]!
+  collateralToken: Bytes!
+  collateralToken1: Bytes!
+  collateralToken2: Bytes!
+  conditionId: Bytes!
+  ctfCondition: Condition!
+  questionId: Bytes!
+  templateId: BigInt!
+  encodedQuestions: [String!]!
+  payoutReported: Boolean!
+  payoutNumerators: [BigInt!]!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  updatedAt: BigInt!
+  transactionHash: Bytes!
+  questions: [MarketQuestion!]! @derivedFrom(field: "market")
+  openingTs: BigInt!
+  hasAnswers: Boolean!
+  finalizeTs: BigInt!
+  questionsInArbitration: BigInt!
+  index: BigInt!
+}
+
+type MarketsCount {
+  id: ID!
+  count: BigInt!
+}
+
+type Question {
+  id: ID!
+  marketQuestionIds: [String!]!
+  index: Int!
+  arbitrator: Bytes!
+  opening_ts: BigInt!
+  timeout: BigInt!
+  finalize_ts: BigInt!
+  is_pending_arbitration: Boolean!
+  best_answer: Bytes!
+  bond: BigInt!
+  min_bond: BigInt!
+  arbitration_occurred: Boolean!
+  marketQuestions: [MarketQuestion!]! @derivedFrom(field: "question")
+  baseQuestions: [MarketQuestion!]! @derivedFrom(field: "baseQuestion")
+}
+
+type MarketQuestion {
+  id: ID!
+  market: Market!
+  baseQuestion: Question!
+  question: Question!
+  index: Int!
+}
+
+type Condition {
+  id: ID!
+  marketIds: [String!]!
+  markets: [Market!]! @derivedFrom(field: "ctfCondition")
+}
+
+type ConditionalEvent {
+  id: Bytes!
+  market: Market!
+  accountId: Bytes!
+  eventType: String!
+  amount: BigInt!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+  collateral: Bytes!
+  transactionHash: Bytes!
+}
+
+type CurateMetadata {
+  id: Bytes!
+  registrationMetaEvidenceURI: String!
+  clearingMetaEvidenceURI: String!
+  metaEvidenceCount: BigInt!
+}
+
+type ArbitratorMetadata {
+  id: Bytes!
+  registrationMetaEvidenceURI: String!
+}

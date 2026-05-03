@@ -21,11 +21,11 @@ dataSources:
       entities: []
       abis:
         - name: MarketFactory
-          file: ./abis/MarketFactory.json
+          file: ../indexer/abis/MarketFactory.json
         - name: Reality
-          file: ./abis/Realitiy.json
+          file: ../indexer/abis/Realitiy.json
         - name: MarketView
-          file: ./abis/MarketView.json
+          file: ../indexer/abis/MarketView.json
       eventHandlers:
         - event: NewMarket(indexed address,string,address,bytes32,bytes32,bytes32[])
           handler: handleNewMarket
@@ -47,11 +47,11 @@ cat <<EOF >> subgraph.yaml
       entities: []
       abis:
         - name: FutarchyFactory
-          file: ./abis/FutarchyFactory.json
+          file: ../indexer/abis/FutarchyFactory.json
         - name: Reality
-          file: ./abis/Realitiy.json
+          file: ../indexer/abis/Realitiy.json
         - name: FutarchyProposal
-          file: ./abis/FutarchyProposal.json
+          file: ../indexer/abis/FutarchyProposal.json
       eventHandlers:
         - event: NewProposal(indexed address,string,bytes32,bytes32)
           handler: handleNewProposal
@@ -73,11 +73,11 @@ cat <<EOF >> subgraph.yaml
       entities: []
       abis:
         - name: MarketFactory
-          file: ./abis/MarketFactory.json
+          file: ../indexer/abis/MarketFactory.json
         - name: Reality
-          file: ./abis/Realitiy.json
+          file: ../indexer/abis/Realitiy.json
         - name: MarketView
-          file: ./abis/MarketView.json
+          file: ../indexer/abis/MarketView.json
       eventHandlers:
         - event: NewMarket(indexed address,string,address,bytes32,bytes32,bytes32[])
           handler: handleNewMarket
@@ -95,7 +95,7 @@ cat <<EOF >> subgraph.yaml
       language: wasm/assemblyscript
       abis:
         - name: Reality
-          file: ./abis/Realitiy.json
+          file: ../indexer/abis/Realitiy.json
       entities: []
       eventHandlers:
         - event: LogNewAnswer(bytes32,indexed bytes32,bytes32,indexed
@@ -123,7 +123,7 @@ cat <<EOF >> subgraph.yaml
       language: wasm/assemblyscript
       abis:
         - name: ConditionalTokens
-          file: ./abis/ConditionalTokens.json
+          file: ../indexer/abis/ConditionalTokens.json
       entities: []
       eventHandlers:
         - event: PositionSplit(indexed address,address,indexed bytes32,indexed
@@ -152,7 +152,7 @@ cat <<EOF >> subgraph.yaml
       language: wasm/assemblyscript
       abis:
         - name: IEvidence
-          file: ./abis/IEvidence.json
+          file: ../indexer/abis/IEvidence.json
       entities: []
       eventHandlers:
         - event: MetaEvidence(indexed uint256,string)
@@ -171,7 +171,7 @@ cat <<EOF >> subgraph.yaml
       language: wasm/assemblyscript
       abis:
         - name: IEvidence
-          file: ./abis/IEvidence.json
+          file: ../indexer/abis/IEvidence.json
       entities: []
       eventHandlers:
         - event: MetaEvidence(indexed uint256,string)
@@ -190,7 +190,7 @@ cat <<EOF >> subgraph.yaml
       language: wasm/assemblyscript
       abis:
         - name: IEvidence
-          file: ./abis/IEvidence.json
+          file: ../indexer/abis/IEvidence.json
       entities: []
       eventHandlers:
         - event: MetaEvidence(indexed uint256,string)
@@ -209,7 +209,7 @@ cat <<EOF >> subgraph.yaml
       language: wasm/assemblyscript
       abis:
         - name: IEvidence
-          file: ./abis/IEvidence.json
+          file: ../indexer/abis/IEvidence.json
       entities: []
       eventHandlers:
         - event: MetaEvidence(indexed uint256,string)

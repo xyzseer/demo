@@ -4,12 +4,15 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky",
+    "indexer:codegen": "yarn workspace @seer-pm/indexer codegen",
+    "indexer:dev": "yarn workspace @seer-pm/indexer dev:indexer"
   },
   "workspaces": [
     "contracts",
     "web",
     "subgraph",
+    "indexer",
     "packages/*"
   ],
   "devDependencies": {
@@ -19,7 +22,7 @@
     "@uniswap/v4-sdk/ethers": "^5.0.0"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "packageManager": "yarn@4.13.0"
 }

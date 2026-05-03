@@ -1,0 +1,35 @@
+{
+  "name": "@seer-pm/indexer",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "clean": "tsc --clean",
+    "build": "tsc --build",
+    "watch": "tsc --watch",
+    "mocha": "ts-mocha test/**/*.ts",
+    "codegen": "node scripts/build-config.mjs > config.yaml && envio codegen",
+    "config:build": "node scripts/build-config.mjs > config.yaml",
+    "dev:indexer": "envio dev",
+    "dev": "envio dev",
+    "start": "envio start",
+    "test": "yarn mocha"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.11",
+    "@types/mocha": "10.0.6",
+    "@types/node": "^22.10.0",
+    "chai": "4.3.10",
+    "mocha": "10.2.0",
+    "ts-mocha": "^10.0.0",
+    "typescript": "5.8.3"
+  },
+  "dependencies": {
+    "envio": "2.32.12"
+  },
+  "optionalDependencies": {
+    "generated": "./generated"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
