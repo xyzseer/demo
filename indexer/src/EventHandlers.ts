@@ -22,6 +22,7 @@ import {
   processMarket,
   readCollateralToken,
 } from "./marketsLogic";
+import { entityId } from "./entityIds";
 import { getFinalizeTs, processReopenedQuestion } from "./realityLogic";
 
 function qid(p: `0x${string}` | string): string {
@@ -30,10 +31,11 @@ function qid(p: `0x${string}` | string): string {
 
 async function forEachQuestionMarket(
   context: IndexerContext,
+  chainId: number,
   questionId: string,
   fn: (marketId: string) => Promise<void>
 ): Promise<void> {
-  const question = await context.Question.get(questionId);
+  const question = await context.Question.get(entityId(chainId, questionId));
   if (!question) return;
   for (const mqId of question.marketQuestionIds) {
     const mq = await context.MarketQuestion.get(mqId);
@@ -52,6 +54,7 @@ MarketFactory.NewMarket.handler(async ({ event, context }) => {
   await processMarket(
     context,
     {
+      chainId,
       factory,
       creator: (event.transaction as { from: Address }).from,
       txHash: (event.transaction as { hash: string }).hash,
@@ -80,6 +83,7 @@ FutarchyFactory.NewProposal.handler(async ({ event, context }) => {
   await processMarket(
     context,
     {
+      chainId,
       factory: futarchyFactory,
       creator: (event.transaction as { from: Address }).from,
       txHash: (event.transaction as { hash: string }).hash,
@@ -92,8 +96,9 @@ FutarchyFactory.NewProposal.handler(async ({ event, context }) => {
 });
 
 Reality.LogNewAnswer.handler(async ({ event, context }) => {
+  const chainId = Number(event.chainId);
   const questionId = qid(event.params.question_id as `0x${string}`);
-  const question = await context.Question.get(questionId);
+  const question = await context.Question.get(entityId(chainId, questionId));
   if (!question) return;
 
   const finalizeTs = question.arbitration_occurred
@@ -107,7 +112,7 @@ Reality.LogNewAnswer.handler(async ({ event, context }) => {
     bond: event.params.bond,
   });
 
-  await forEachQuestionMarket(context, questionId, async (marketId) => {
+  await forEachQuestionMarket(context, chainId, questionId, async (marketId) => {
     const market = await context.Market.get(marketId);
     if (!market) return;
     const ft = await getFinalizeTs(context, market.id);
@@ -121,11 +126,12 @@ Reality.LogNewAnswer.handler(async ({ event, context }) => {
 });
 
 Reality.LogNotifyOfArbitrationRequest.handler(async ({ event, context }) => {
+  const chainId = Number(event.chainId);
   const questionId = qid(event.params.question_id as `0x${string}`);
-  const question = await context.Question.get(questionId);
+  const question = await context.Question.get(entityId(chainId, questionId));
   if (!question) return;
   context.Question.set({ ...question, is_pending_arbitration: true });
-  await forEachQuestionMarket(context, questionId, async (marketId) => {
+  await forEachQuestionMarket(context, chainId, questionId, async (marketId) => {
     const market = await context.Market.get(marketId);
     if (!market) return;
     context.Market.set({
@@ -137,11 +143,12 @@ Reality.LogNotifyOfArbitrationRequest.handler(async ({ event, context }) => {
 });
 
 Reality.LogCancelArbitration.handler(async ({ event, context }) => {
+  const chainId = Number(event.chainId);
   const questionId = qid(event.params.question_id as `0x${string}`);
-  const question = await context.Question.get(questionId);
+  const question = await context.Question.get(entityId(chainId, questionId));
   if (!question) return;
   context.Question.set({ ...question, is_pending_arbitration: false });
-  await forEachQuestionMarket(context, questionId, async (marketId) => {
+  await forEachQuestionMarket(context, chainId, questionId, async (marketId) => {
     const market = await context.Market.get(marketId);
     if (!market) return;
     context.Market.set({
@@ -153,8 +160,9 @@ Reality.LogCancelArbitration.handler(async ({ event, context }) => {
 });
 
 Reality.LogFinalize.handler(async ({ event, context }) => {
+  const chainId = Number(event.chainId);
   const questionId = qid(event.params.question_id as `0x${string}`);
-  const question = await context.Question.get(questionId);
+  const question = await context.Question.get(entityId(chainId, questionId));
   if (!question) return;
   context.Question.set({
     ...question,
@@ -162,7 +170,7 @@ Reality.LogFinalize.handler(async ({ event, context }) => {
     is_pending_arbitration: false,
     arbitration_occurred: true,
   });
-  await forEachQuestionMarket(context, questionId, async (marketId) => {
+  await forEachQuestionMarket(context, chainId, questionId, async (marketId) => {
     const market = await context.Market.get(marketId);
     if (!market) return;
     context.Market.set({
@@ -174,13 +182,15 @@ Reality.LogFinalize.handler(async ({ event, context }) => {
 });
 
 Reality.LogReopenQuestion.handler(async ({ event, context }) => {
+  const chainId = Number(event.chainId);
   const reopened = qid(event.params.reopened_question_id as `0x${string}`);
   const newQ = qid(event.params.question_id as `0x${string}`);
-  await processReopenedQuestion(context, reopened, newQ, event.block.timestamp);
+  await processReopenedQuestion(context, chainId, reopened, newQ, event.block.timestamp);
 });
 
 ConditionalTokens.PositionSplit.handler(async ({ event, context }) => {
-  const conditionId = qid(event.params.conditionId as `0x${string}`);
+  const chainId = Number(event.chainId);
+  const conditionId = entityId(chainId, qid(event.params.conditionId as `0x${string}`));
   const condition = await context.Condition.get(conditionId);
   if (!condition) return;
   const parentCol = (event.params.parentCollectionId as `0x${string}`).toLowerCase();
@@ -196,11 +206,14 @@ ConditionalTokens.PositionSplit.handler(async ({ event, context }) => {
     }
   }
   const input = (event.transaction as { input?: `0x${string}` }).input;
-  const market = await getMarketFromTx(context, input, splitMethods);
+  const market = await getMarketFromTx(context, chainId, input, splitMethods);
   if (!market) return;
   const full = await context.Market.get(market.id);
   if (!full) return;
-  const id = `${(event.transaction as { hash: string }).hash.toLowerCase()}-${event.logIndex}`;
+  const id = entityId(
+    chainId,
+    `${(event.transaction as { hash: string }).hash.toLowerCase()}-${event.logIndex}`,
+  );
   context.ConditionalEvent.set({
     id,
     market_id: full.id,
@@ -215,7 +228,8 @@ ConditionalTokens.PositionSplit.handler(async ({ event, context }) => {
 });
 
 ConditionalTokens.PositionsMerge.handler(async ({ event, context }) => {
-  const conditionId = qid(event.params.conditionId as `0x${string}`);
+  const chainId = Number(event.chainId);
+  const conditionId = entityId(chainId, qid(event.params.conditionId as `0x${string}`));
   const condition = await context.Condition.get(conditionId);
   if (!condition) return;
   const parentCol = (event.params.parentCollectionId as `0x${string}`).toLowerCase();
@@ -231,11 +245,14 @@ ConditionalTokens.PositionsMerge.handler(async ({ event, context }) => {
     }
   }
   const input = (event.transaction as { input?: `0x${string}` }).input;
-  const market = await getMarketFromTx(context, input, mergeMethods);
+  const market = await getMarketFromTx(context, chainId, input, mergeMethods);
   if (!market) return;
   const full = await context.Market.get(market.id);
   if (!full) return;
-  const id = `${(event.transaction as { hash: string }).hash.toLowerCase()}-${event.logIndex}`;
+  const id = entityId(
+    chainId,
+    `${(event.transaction as { hash: string }).hash.toLowerCase()}-${event.logIndex}`,
+  );
   context.ConditionalEvent.set({
     id,
     market_id: full.id,
@@ -250,7 +267,8 @@ ConditionalTokens.PositionsMerge.handler(async ({ event, context }) => {
 });
 
 ConditionalTokens.PayoutRedemption.handler(async ({ event, context }) => {
-  const conditionId = qid(event.params.conditionId as `0x${string}`);
+  const chainId = Number(event.chainId);
+  const conditionId = entityId(chainId, qid(event.params.conditionId as `0x${string}`));
   const condition = await context.Condition.get(conditionId);
   if (!condition) return;
   const parentCol = (event.params.parentCollectionId as `0x${string}`).toLowerCase();
@@ -266,11 +284,14 @@ ConditionalTokens.PayoutRedemption.handler(async ({ event, context }) => {
     }
   }
   const input = (event.transaction as { input?: `0x${string}` }).input;
-  const market = await getMarketFromTx(context, input, redeemMethods);
+  const market = await getMarketFromTx(context, chainId, input, redeemMethods);
   if (!market) return;
   const full = await context.Market.get(market.id);
   if (!full) return;
-  const id = `${(event.transaction as { hash: string }).hash.toLowerCase()}-${event.logIndex}`;
+  const id = entityId(
+    chainId,
+    `${(event.transaction as { hash: string }).hash.toLowerCase()}-${event.logIndex}`,
+  );
   context.ConditionalEvent.set({
     id,
     market_id: full.id,
@@ -285,7 +306,8 @@ ConditionalTokens.PayoutRedemption.handler(async ({ event, context }) => {
 });
 
 ConditionalTokens.ConditionResolution.handler(async ({ event, context }) => {
-  const conditionId = qid(event.params.conditionId as `0x${string}`);
+  const chainId = Number(event.chainId);
+  const conditionId = entityId(chainId, qid(event.params.conditionId as `0x${string}`));
   const condition = await context.Condition.get(conditionId);
   if (!condition) return;
   const nums = [...event.params.payoutNumerators] as bigint[];
@@ -302,11 +324,13 @@ ConditionalTokens.ConditionResolution.handler(async ({ event, context }) => {
 });
 
 CurateIEvidence.MetaEvidence.handler(async ({ event, context }) => {
+  const chainId = Number(event.chainId);
   const addr = event.srcAddress.toLowerCase();
-  let meta = await context.CurateMetadata.get(addr);
+  const id = entityId(chainId, addr);
+  let meta = await context.CurateMetadata.get(id);
   if (!meta) {
     meta = {
-      id: addr,
+      id,
       registrationMetaEvidenceURI: "",
       clearingMetaEvidenceURI: "",
       metaEvidenceCount: 0n,
@@ -325,10 +349,12 @@ CurateIEvidence.MetaEvidence.handler(async ({ event, context }) => {
 });
 
 ArbitratorIEvidence.MetaEvidence.handler(async ({ event, context }) => {
+  const chainId = Number(event.chainId);
   const addr = event.srcAddress.toLowerCase();
-  let meta = await context.ArbitratorMetadata.get(addr);
+  const id = entityId(chainId, addr);
+  let meta = await context.ArbitratorMetadata.get(id);
   if (!meta) {
-    meta = { id: addr, registrationMetaEvidenceURI: "" };
+    meta = { id, registrationMetaEvidenceURI: "" };
   }
   context.ArbitratorMetadata.set({
     ...meta,

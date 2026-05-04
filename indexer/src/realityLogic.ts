@@ -1,4 +1,5 @@
 import type { IndexerContext } from "./context";
+import { entityId } from "./entityIds";
 import { DEFAULT_FINALIZE_TS } from "./marketsLogic";
 
 export async function getFinalizeTs(context: IndexerContext, marketId: string): Promise<bigint> {
@@ -22,18 +23,21 @@ export async function getFinalizeTs(context: IndexerContext, marketId: string): 
 
 export async function processReopenedQuestion(
   context: IndexerContext,
+  chainId: number,
   baseQuestionId: string,
   newQuestionId: string,
   blockTimestamp: bigint
 ): Promise<void> {
-  const baseQuestion = await context.Question.get(baseQuestionId);
+  const baseQuestion = await context.Question.get(entityId(chainId, baseQuestionId));
   if (!baseQuestion) return;
 
   const mqIds = baseQuestion.marketQuestionIds;
   if (mqIds.length === 0) return;
 
+  const newQKey = entityId(chainId, newQuestionId);
   context.Question.set({
-    id: newQuestionId,
+    id: newQKey,
+    questionId: newQuestionId.toLowerCase() as `0x${string}`,
     index: baseQuestion.index,
     arbitrator: baseQuestion.arbitrator,
     opening_ts: baseQuestion.opening_ts,
@@ -52,7 +56,7 @@ export async function processReopenedQuestion(
     if (!mq) continue;
     context.MarketQuestion.set({
       ...mq,
-      question_id: newQuestionId,
+      question_id: newQKey,
     });
     const market = await context.Market.get(mq.market_id);
     if (market) {

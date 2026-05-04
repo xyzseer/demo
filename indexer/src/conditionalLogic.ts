@@ -1,5 +1,6 @@
 import type { Address } from "viem";
 import type { IndexerContext } from "./context";
+import { entityId } from "./entityIds";
 
 type MethodSig = { name: string; signature: string; marketParamPos: number };
 
@@ -41,6 +42,7 @@ function decodeAddressArgInner(input: `0x${string}`, marketParamPos: number): Ad
 
 export async function getMarketFromTx(
   context: IndexerContext,
+  chainId: number,
   input: `0x${string}` | undefined,
   methods: MethodSig[]
 ): Promise<{ id: string; marketType: "Generic" | "Futarchy"; collateralToken: string } | null> {
@@ -50,7 +52,7 @@ export async function getMarketFromTx(
   if (!matchingMethod) return null;
   const addr = decodeAddressArgInner(input, matchingMethod.marketParamPos);
   if (!addr) return null;
-  const market = await context.Market.get(addr.toLowerCase());
+  const market = await context.Market.get(entityId(chainId, addr));
   return market ?? null;
 }
 

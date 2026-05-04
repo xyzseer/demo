@@ -5,6 +5,8 @@ enum MarketType {
 
 type Market {
   id: ID!
+  chainId: BigInt!
+  address: Bytes!
   marketQuestionIds: [String!]!
   marketType: MarketType!
   factory: Bytes!
@@ -48,6 +50,7 @@ type MarketsCount {
 
 type Question {
   id: ID!
+  questionId: Bytes!
   marketQuestionIds: [String!]!
   index: Int!
   arbitrator: Bytes!
@@ -73,12 +76,13 @@ type MarketQuestion {
 
 type Condition {
   id: ID!
+  conditionId: Bytes!
   marketIds: [String!]!
   markets: [Market!]! @derivedFrom(field: "ctfCondition")
 }
 
 type ConditionalEvent {
-  id: Bytes!
+  id: ID!
   market: Market!
   accountId: Bytes!
   eventType: String!
@@ -90,13 +94,13 @@ type ConditionalEvent {
 }
 
 type CurateMetadata {
-  id: Bytes!
+  id: ID!
   registrationMetaEvidenceURI: String!
   clearingMetaEvidenceURI: String!
   metaEvidenceCount: BigInt!
 }
 
 type ArbitratorMetadata {
-  id: Bytes!
+  id: ID!
   registrationMetaEvidenceURI: String!
 }
